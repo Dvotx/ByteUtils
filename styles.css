@@ -434,6 +434,17 @@ body {
     
     .container-produtos {
         padding: 10px;
+        gap: 15px;
+    }
+    
+    .secao-categoria {
+        padding: 0 10px;
+        margin-bottom: 30px;
+    }
+    
+    .titulo-categoria {
+        font-size: 1.2rem;
+        margin-bottom: 10px;
     }
     
     .caixa-iten1,
@@ -441,8 +452,37 @@ body {
     .caixa-iten3,
     .caixa-iten4,
     .caixa-iten5 {
-        width: calc(50% - 10px);
-        min-height: 200px;
+        width: 140px;
+        min-width: 140px;
+        min-height: 180px;
+    }
+    
+    .caixa-iten1 img,
+    .caixa-iten2 img,
+    .caixa-iten3 img,
+    .caixa-iten4 img,
+    .caixa-iten5 img {
+        height: 120px;
+        padding: 10px;
+    }
+    
+    .caixa-iten1 h2,
+    .caixa-iten2 h2,
+    .caixa-iten3 h2,
+    .caixa-iten4 h2,
+    .caixa-iten5 h2 {
+        font-size: 3rem;
+        margin: 15px 0 10px 0;
+    }
+    
+    .caixa-iten1 h3,
+    .caixa-iten2 h3,
+    .caixa-iten3 h3,
+    .caixa-iten4 h3,
+    .caixa-iten5 h3 {
+        font-size: 0.9rem;
+        margin: 0 0 15px 0;
+        padding: 0 10px;
     }
 }
 
@@ -452,7 +492,9 @@ body {
     .caixa-iten3,
     .caixa-iten4,
     .caixa-iten5 {
-        width: 100%;
+        width: 130px;
+        min-width: 130px;
+        min-height: 170px;
     }
     
     .logo h1 {
