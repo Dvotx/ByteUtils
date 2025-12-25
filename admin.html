@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Admin - ByteUtils</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #1E1E1E 0%, #0F0F0F 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            color: #C9A961;
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .login-box, .admin-panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 40px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(201, 169, 97, 0.3);
+        }
+
+        .login-box {
+            text-align: center;
+        }
+
+        .btn-login-google {
+            background: linear-gradient(135deg, #C9A961 0%, #E6D5A8 100%);
+            color: #0F0F0F;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-login-google:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(201, 169, 97, 0.4);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #E6D5A8;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(201, 169, 97, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #C9A961;
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, #C9A961 0%, #E6D5A8 100%);
+            color: #0F0F0F;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(201, 169, 97, 0.4);
+        }
+
+        .btn-logout {
+            background: transparent;
+            border: 2px solid #C9A961;
+            color: #C9A961;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .btn-logout:hover {
+            background: #C9A961;
+            color: #0F0F0F;
+        }
+
+        .user-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 15px;
+            background: rgba(201, 169, 97, 0.1);
+            border-radius: 8px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .success-message {
+            background: rgba(5, 150, 105, 0.2);
+            border: 1px solid #059669;
+            color: #10B981;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 Painel Admin - ByteUtils</h1>
+            <p>Sistema de Gerenciamento de Produtos</p>
+        </div>
+
+        <!-- TELA DE LOGIN -->
+        <div id="loginBox" class="login-box">
+            <h2 style="margin-bottom: 20px;">Login de Influenciador</h2>
+            <p style="margin-bottom: 30px; color: #E6D5A8;">Entre com sua conta Google para adicionar produtos</p>
+            <button id="btnLoginGoogle" class="btn-login-google">
+                🔑 Entrar com Google
+            </button>
+        </div>
+
+        <!-- PAINEL ADMIN (escondido inicialmente) -->
+        <div id="adminPanel" class="admin-panel hidden">
+            <div class="user-info">
+                <div>
+                    <strong>Logado como:</strong> <span id="userName"></span>
+                </div>
+                <button id="btnLogout" class="btn-logout">Sair</button>
+            </div>
+
+            <div id="successMessage" class="success-message hidden">
+                ✅ Produto adicionado com sucesso!
+            </div>
+
+            <h2 style="margin-bottom: 30px; color: #C9A961;">Adicionar Novo Produto</h2>
+            
+            <form id="formProduct">
+                <div class="form-group">
+                    <label>Categoria</label>
+                    <select id="categoria" required>
+                        <option value="">Selecione...</option>
+                        <option value="notebooks">💻 Notebooks</option>
+                        <option value="celulares">📱 Celulares</option>
+                        <option value="acessorios">🎧 Acessórios</option>
+                        <option value="games">🎮 Games</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Nome do Produto</label>
+                    <input type="text" id="nomeProduto" placeholder="Ex: Notebook Gamer Dell" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Link de Afiliado</label>
+                    <input type="url" id="linkAfiliado" placeholder="https://..." required>
+                </div>
+
+                <div class="form-group">
+                    <label>URL da Imagem do Produto</label>
+                    <input type="url" id="urlImagem" placeholder="https://...">
+                    <small style="color: #888; display: block; margin-top: 5px;">Opcional - se deixar vazio, vai usar emoji</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Emoji (se não tiver imagem)</label>
+                    <input type="text" id="emoji" placeholder="💻" maxlength="2">
+                </div>
+
+                <button type="submit" class="btn-submit">➕ Adicionar Produto</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getDatabase, ref, push } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+        // Configuração Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDE4rxt6EjDxHY510kwmg9dMCDBwZmAgCk",
+            authDomain: "yakisame-b57b6.firebaseapp.com",
+            projectId: "yakisame-b57b6",
+            storageBucket: "yakisame-b57b6.firebasestorage.app",
+            messagingSenderId: "421411319772",
+            appId: "1:421411319772:web:0ba4d2ecaaa0aad69da919",
+            measurementId: "G-YRKQ7S006F",
+            databaseURL: "https://yakisame-b57b6-default-rtdb.firebaseio.com"
+        };
+
+        // Inicializar Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
+        const provider = new GoogleAuthProvider();
+
+        // Elementos
+        const loginBox = document.getElementById('loginBox');
+        const adminPanel = document.getElementById('adminPanel');
+        const btnLoginGoogle = document.getElementById('btnLoginGoogle');
+        const btnLogout = document.getElementById('btnLogout');
+        const userName = document.getElementById('userName');
+        const formProduct = document.getElementById('formProduct');
+        const successMessage = document.getElementById('successMessage');
+
+        // Login com Google
+        btnLoginGoogle.addEventListener('click', async () => {
+            try {
+                await signInWithPopup(auth, provider);
+            } catch (error) {
+                alert('Erro ao fazer login: ' + error.message);
+            }
+        });
+
+        // Logout
+        btnLogout.addEventListener('click', async () => {
+            await signOut(auth);
+        });
+
+        // Verificar estado de autenticação
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                loginBox.classList.add('hidden');
+                adminPanel.classList.remove('hidden');
+                userName.textContent = user.displayName || user.email;
+            } else {
+                loginBox.classList.remove('hidden');
+                adminPanel.classList.add('hidden');
+            }
+        });
+
+        // Adicionar produto
+        formProduct.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const produto = {
+                categoria: document.getElementById('categoria').value,
+                nome: document.getElementById('nomeProduto').value,
+                link: document.getElementById('linkAfiliado').value,
+                imagem: document.getElementById('urlImagem').value,
+                emoji: document.getElementById('emoji').value,
+                adicionadoPor: auth.currentUser.displayName || auth.currentUser.email,
+                timestamp: Date.now()
+            };
+
+            try {
+                await push(ref(database, 'produtos'), produto);
+                
+                // Mostrar mensagem de sucesso
+                successMessage.classList.remove('hidden');
+                setTimeout(() => {
+                    successMessage.classList.add('hidden');
+                }, 3000);
+
+                // Limpar formulário
+                formProduct.reset();
+            } catch (error) {
+                alert('Erro ao adicionar produto: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>
