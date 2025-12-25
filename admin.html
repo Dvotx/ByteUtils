@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Admin - ByteUtils</title>
+    <title>Painel Admin - Yakisame</title>
     <style>
         * {
             margin: 0;
@@ -13,10 +13,10 @@
 
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
-            background: linear-gradient(135deg, #1E1E1E 0%, #0F0F0F 100%);
+            background: linear-gradient(135deg, #0F0F0F 0%, #1E1E1E 100%);
             color: white;
             min-height: 100vh;
-            padding: 20px;
+            padding: 40px 20px;
         }
 
         .container {
@@ -26,65 +26,94 @@
 
         .header {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 50px;
         }
 
         .header h1 {
             color: #C9A961;
-            font-size: 2rem;
+            font-size: 2.5rem;
             margin-bottom: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .header p {
+            color: #E6D5A8;
+            font-size: 1.1rem;
+            opacity: 0.9;
         }
 
         .login-box, .admin-panel {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            padding: 40px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(201, 169, 97, 0.3);
+            background: rgba(30, 30, 30, 0.95);
+            border-radius: 20px;
+            padding: 50px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(201, 169, 97, 0.2);
         }
 
         .login-box {
             text-align: center;
         }
 
+        .login-box h2 {
+            color: #E6D5A8;
+            margin-bottom: 15px;
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .login-box p {
+            color: #999;
+            margin-bottom: 40px;
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
         .btn-login-google {
             background: linear-gradient(135deg, #C9A961 0%, #E6D5A8 100%);
             color: #0F0F0F;
             border: none;
-            padding: 15px 40px;
-            border-radius: 8px;
+            padding: 16px 50px;
+            border-radius: 12px;
             font-size: 1.1rem;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.3s ease;
+            display: inline-block;
+            box-shadow: 0 8px 25px rgba(201, 169, 97, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .btn-login-google:hover {
-            transform: scale(1.05);
-            box-shadow: 0 8px 20px rgba(201, 169, 97, 0.4);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(201, 169, 97, 0.5);
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 30px;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             color: #E6D5A8;
-            font-weight: 500;
+            font-weight: 600;
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
         }
 
         .form-group input,
         .form-group select,
         .form-group textarea {
             width: 100%;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid rgba(201, 169, 97, 0.3);
-            background: rgba(255, 255, 255, 0.1);
+            padding: 14px 18px;
+            border-radius: 12px;
+            border: 2px solid rgba(201, 169, 97, 0.3);
+            background: rgba(15, 15, 15, 0.6);
             color: white;
             font-size: 1rem;
+            transition: all 0.3s ease;
         }
 
         .form-group input:focus,
@@ -92,34 +121,53 @@
         .form-group textarea:focus {
             outline: none;
             border-color: #C9A961;
+            background: rgba(15, 15, 15, 0.9);
+            box-shadow: 0 0 0 4px rgba(201, 169, 97, 0.1);
+        }
+
+        .form-group select option {
+            background: #1E1E1E;
+            color: white;
+        }
+
+        .form-group small {
+            display: block;
+            margin-top: 8px;
+            color: #777;
+            font-size: 0.85rem;
         }
 
         .btn-submit {
             background: linear-gradient(135deg, #C9A961 0%, #E6D5A8 100%);
             color: #0F0F0F;
             border: none;
-            padding: 12px 30px;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
+            padding: 16px 30px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.3s ease;
             width: 100%;
+            box-shadow: 0 8px 25px rgba(201, 169, 97, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .btn-submit:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(201, 169, 97, 0.4);
+            box-shadow: 0 12px 35px rgba(201, 169, 97, 0.5);
         }
 
         .btn-logout {
             background: transparent;
             border: 2px solid #C9A961;
             color: #C9A961;
-            padding: 10px 20px;
+            padding: 10px 24px;
             border-radius: 8px;
             cursor: pointer;
-            margin-bottom: 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
         }
 
         .btn-logout:hover {
@@ -131,10 +179,15 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 30px;
-            padding: 15px;
+            margin-bottom: 35px;
+            padding: 20px;
             background: rgba(201, 169, 97, 0.1);
-            border-radius: 8px;
+            border-radius: 12px;
+            border: 1px solid rgba(201, 169, 97, 0.2);
+        }
+
+        .user-info strong {
+            color: #E6D5A8;
         }
 
         .hidden {
@@ -142,29 +195,43 @@
         }
 
         .success-message {
-            background: rgba(5, 150, 105, 0.2);
-            border: 1px solid #059669;
-            color: #10B981;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+            background: linear-gradient(135deg, rgba(201, 169, 97, 0.2) 0%, rgba(230, 213, 168, 0.2) 100%);
+            border: 1px solid #C9A961;
+            color: #E6D5A8;
+            padding: 18px;
+            border-radius: 12px;
+            margin-bottom: 25px;
             text-align: center;
+            font-weight: 600;
+        }
+
+        .admin-panel h2 {
+            color: #C9A961;
+            margin-bottom: 35px;
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🔐 Painel Admin - ByteUtils</h1>
+            <h1>Painel Admin - Yakisame</h1>
             <p>Sistema de Gerenciamento de Produtos</p>
         </div>
 
         <!-- TELA DE LOGIN -->
         <div id="loginBox" class="login-box">
-            <h2 style="margin-bottom: 20px;">Login de Influenciador</h2>
-            <p style="margin-bottom: 30px; color: #E6D5A8;">Entre com sua conta Google para adicionar produtos</p>
+            <h2 style="margin-bottom: 20px;">Login Admin</h2>
+            <p style="margin-bottom: 30px; color: #E6D5A8;">Entre com sua conta Google para gerenciar produtos</p>
             <button id="btnLoginGoogle" class="btn-login-google">
-                🔑 Entrar com Google
+                Entrar com Google
             </button>
         </div>
 
@@ -178,7 +245,7 @@
             </div>
 
             <div id="successMessage" class="success-message hidden">
-                ✅ Produto adicionado com sucesso!
+                Produto adicionado com sucesso!
             </div>
 
             <h2 style="margin-bottom: 30px; color: #C9A961;">Adicionar Novo Produto</h2>
@@ -188,10 +255,10 @@
                     <label>Categoria</label>
                     <select id="categoria" required>
                         <option value="">Selecione...</option>
-                        <option value="notebooks">💻 Notebooks</option>
-                        <option value="celulares">📱 Celulares</option>
-                        <option value="acessorios">🎧 Acessórios</option>
-                        <option value="games">🎮 Games</option>
+                        <option value="notebooks">Notebooks</option>
+                        <option value="celulares">Celulares</option>
+                        <option value="acessorios">Acessórios</option>
+                        <option value="games">Games</option>
                     </select>
                 </div>
 
@@ -213,10 +280,10 @@
 
                 <div class="form-group">
                     <label>Emoji (se não tiver imagem)</label>
-                    <input type="text" id="emoji" placeholder="💻" maxlength="2">
+                    <input type="text" id="emoji" placeholder="Ex: 💻" maxlength="2">
                 </div>
 
-                <button type="submit" class="btn-submit">➕ Adicionar Produto</button>
+                <button type="submit" class="btn-submit">Adicionar Produto</button>
             </form>
         </div>
     </div>
