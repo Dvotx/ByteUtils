@@ -239,7 +239,6 @@ body {
     overflow-x: auto;
     overflow-y: hidden;
     scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch;
 }
 
 /* Estilizar a barra de rolagem */
