@@ -50,7 +50,12 @@ function carregarProdutos() {
 
 function renderizarCategoria(categoriaId, produtos) {
     const container = document.getElementById(`container-${categoriaId}`);
-    if (!container || produtos.length === 0) return;
+    if (!container) return;
+    
+    // Limpa o container antes de adicionar novos produtos
+    container.innerHTML = '';
+    
+    if (produtos.length === 0) return;
 
     produtos.forEach((produto, index) => {
         const produtoHTML = criarCardProduto(produto, index);
@@ -61,9 +66,15 @@ function renderizarCategoria(categoriaId, produtos) {
 function criarCardProduto(produto, index) {
     const classeCaixa = `caixa-iten${(index % 5) + 1}`;
     
+    // Garante que a imagem existe
+    if (!produto.imagem) {
+        console.warn('Produto sem imagem:', produto.nome);
+        return '';
+    }
+    
     return `
         <a href="${produto.link}" target="_blank" rel="noopener" class="${classeCaixa}">
-            <img src="${produto.imagem}" alt="${produto.nome}">
+            <img src="${produto.imagem}" alt="${produto.nome}" onerror="this.style.display='none'; console.error('Erro ao carregar imagem:', this.src);">
             <h3>${produto.nome}</h3>
         </a>
     `;
