@@ -378,13 +378,13 @@
                 <div class="form-group">
                     <label>Link de Afiliado</label>
                     <input type="url" id="linkAfiliado" placeholder="https://..." required>
-                    <small style="color: #888; display: block; margin-top: 5px;">Cole o link e a imagem será buscada automaticamente</small>
+                    <small style="color: #888; display: block; margin-top: 5px;">Cole o link do Mercado Livre e a imagem será buscada automaticamente</small>
                 </div>
 
                 <div class="form-group">
                     <label>URL da Imagem do Produto</label>
                     <input type="url" id="urlImagem" placeholder="https://..." required>
-                    <small id="imagemStatus" style="color: #888; display: block; margin-top: 5px;">Cole o link da Amazon para buscar automaticamente</small>
+                    <small id="imagemStatus" style="color: #888; display: block; margin-top: 5px;">Cole o link do Mercado Livre para buscar automaticamente</small>
                     <div id="previewImagem" style="margin-top: 10px; display: none;">
                         <img id="imgPreview" style="max-width: 200px; border-radius: 8px; border: 2px solid #C9A961;" alt="Preview">
                     </div>
@@ -455,45 +455,104 @@
                 imagemStatus.textContent = '🔍 Buscando imagem...';
                 imagemStatus.style.color = '#C9A961';
 
-                // Tenta vários padrões de ASIN da Amazon
-                const patterns = [
-                    /\/dp\/([A-Z0-9]{10})/,
-                    /\/product\/([A-Z0-9]{10})/,
-                    /\/gp\/product\/([A-Z0-9]{10})/,
-                    /\/d\/([A-Z0-9]{10})/,
-                    /ASIN[=:]([A-Z0-9]{10})/i,
-                    /\/([A-Z0-9]{10})(?:\/|\?|$)/
-                ];
-
-                let asin = null;
-                for (const pattern of patterns) {
-                    const match = url.match(pattern);
-                    if (match) {
-                        asin = match[1];
-                        break;
-                    }
-                }
-                
-                if (asin) {
-                    console.log('ASIN encontrado:', asin);
-                    
-                    // Tenta múltiplos formatos de URL de imagem da Amazon
-                    const imageFormats = [
-                        `https://m.media-amazon.com/images/I/${asin}._AC_SL1500_.jpg`,
-                        `https://images-na.ssl-images-amazon.com/images/I/${asin}._AC_UL1500_.jpg`,
-                        `https://m.media-amazon.com/images/I/${asin}._AC_SX679_.jpg`,
-                        `https://images-na.ssl-images-amazon.com/images/I/${asin}._SL1000_.jpg`
-                    ];
-                    
-                    tentarCarregarImagem(imageFormats, 0);
+                // Detecta se é Mercado Livre ou Amazon
+                if (url.includes('mercadolivre') || url.includes('mercadolibre') || url.includes('mlb')) {
+                    buscarImagemMercadoLivre(url);
+                } else if (url.includes('amazon')) {
+                    buscarImagemAmazon(url);
                 } else {
-                    imagemStatus.textContent = '⚠️ Não encontrei o código do produto. Cole a URL da imagem manualmente.';
-                    imagemStatus.style.color = '#ff6b6b';
+                    imagemStatus.textContent = 'ℹ️ Cole a URL da imagem do produto manualmente';
+                    imagemStatus.style.color = '#888';
                 }
             } catch (error) {
                 imagemStatus.textContent = '⚠️ Erro ao buscar imagem';
                 imagemStatus.style.color = '#ff6b6b';
                 console.error('Erro:', error);
+            }
+        }
+
+        // Buscar imagem do Mercado Livre
+        async function buscarImagemMercadoLivre(url) {
+            try {
+                // Extrai o ID do produto (MLB-xxxxxxx)
+                const mlbMatch = url.match(/ML[A-Z]-\d+/i);
+                
+                if (!mlbMatch) {
+                    imagemStatus.textContent = '⚠️ Não encontrei o código do produto. Cole a URL da imagem manualmente.';
+                    imagemStatus.style.color = '#ff6b6b';
+                    return;
+                }
+
+                const produtoId = mlbMatch[0];
+                console.log('ID do produto Mercado Livre:', produtoId);
+
+                // Busca os dados do produto via API do Mercado Livre
+                const apiUrl = `https://api.mercadolibre.com/items/${produtoId}`;
+                
+                const response = await fetch(apiUrl);
+                
+                if (!response.ok) {
+                    throw new Error('Produto não encontrado');
+                }
+
+                const data = await response.json();
+                
+                if (data.pictures && data.pictures.length > 0) {
+                    // Pega a primeira imagem em alta qualidade
+                    const imagemUrl = data.pictures[0].secure_url || data.pictures[0].url;
+                    
+                    urlImagemInput.value = imagemUrl;
+                    imgPreview.src = imagemUrl;
+                    previewImagem.style.display = 'block';
+                    imagemStatus.textContent = '✅ Imagem encontrada do Mercado Livre!';
+                    imagemStatus.style.color = '#4CAF50';
+                } else {
+                    imagemStatus.textContent = '⚠️ Produto sem imagem. Cole a URL manualmente.';
+                    imagemStatus.style.color = '#ff6b6b';
+                }
+            } catch (error) {
+                console.error('Erro ao buscar no Mercado Livre:', error);
+                imagemStatus.textContent = '⚠️ Erro ao buscar imagem. Cole a URL manualmente.';
+                imagemStatus.style.color = '#ff6b6b';
+            }
+        }
+
+        // Buscar imagem da Amazon
+        function buscarImagemAmazon(url) {
+            // Tenta vários padrões de ASIN da Amazon
+            const patterns = [
+                /\/dp\/([A-Z0-9]{10})/,
+                /\/product\/([A-Z0-9]{10})/,
+                /\/gp\/product\/([A-Z0-9]{10})/,
+                /\/d\/([A-Z0-9]{10})/,
+                /ASIN[=:]([A-Z0-9]{10})/i,
+                /\/([A-Z0-9]{10})(?:\/|\?|$)/
+            ];
+
+            let asin = null;
+            for (const pattern of patterns) {
+                const match = url.match(pattern);
+                if (match) {
+                    asin = match[1];
+                    break;
+                }
+            }
+            
+            if (asin) {
+                console.log('ASIN encontrado:', asin);
+                
+                // Tenta múltiplos formatos de URL de imagem da Amazon
+                const imageFormats = [
+                    `https://m.media-amazon.com/images/I/${asin}._AC_SL1500_.jpg`,
+                    `https://images-na.ssl-images-amazon.com/images/I/${asin}._AC_UL1500_.jpg`,
+                    `https://m.media-amazon.com/images/I/${asin}._AC_SX679_.jpg`,
+                    `https://images-na.ssl-images-amazon.com/images/I/${asin}._SL1000_.jpg`
+                ];
+                
+                tentarCarregarImagem(imageFormats, 0);
+            } else {
+                imagemStatus.textContent = '⚠️ Não encontrei o código do produto. Cole a URL da imagem manualmente.';
+                imagemStatus.style.color = '#ff6b6b';
             }
         }
 
@@ -639,7 +698,7 @@
                 formProduct.reset();
                 previewImagem.style.display = 'none';
                 produtoIdInput.value = '';
-                imagemStatus.textContent = 'Cole o link da Amazon para buscar automaticamente';
+                imagemStatus.textContent = 'Cole o link do Mercado Livre para buscar automaticamente';
                 imagemStatus.style.color = '#888';
             } catch (error) {
                 alert('Erro ao salvar produto: ' + error.message);
@@ -758,7 +817,7 @@
             btnCancelar.style.display = 'none';
             formProduct.reset();
             previewImagem.style.display = 'none';
-            imagemStatus.textContent = 'Cole o link da Amazon para buscar automaticamente';
+            imagemStatus.textContent = 'Cole o link do Mercado Livre para buscar automaticamente';
             imagemStatus.style.color = '#888';
         }
 
