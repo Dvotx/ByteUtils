@@ -378,13 +378,18 @@
                 <div class="form-group">
                     <label>Link de Afiliado</label>
                     <input type="url" id="linkAfiliado" placeholder="https://..." required>
-                    <small id="imagemStatus" style="color: #888; display: block; margin-top: 5px;">Cole o link do Mercado Livre</small>
+                    <small style="color: #888; display: block; margin-top: 5px;">Cole qualquer link de afiliado</small>
+                </div>
+
+                <div class="form-group">
+                    <label>URL da Imagem do Produto</label>
+                    <input type="url" id="urlImagem" placeholder="https://..." required>
+                    <small id="imagemStatus" style="color: #888; display: block; margin-top: 5px;">Cole a URL da imagem do produto</small>
                     <div id="previewImagem" style="margin-top: 10px; display: none;">
                         <img id="imgPreview" style="max-width: 200px; border-radius: 8px; border: 2px solid #C9A961;" alt="Preview">
                     </div>
                 </div>
 
-                <input type="hidden" id="urlImagem">
                 <input type="hidden" id="produtoId" value="">
                 <button type="submit" class="btn-submit" id="btnSubmit">Adicionar Produto</button>
                 <button type="button" class="btn-logout" id="btnCancelar" style="display: none; margin-top: 15px; width: 100%;">Cancelar Edição</button>
@@ -447,21 +452,25 @@
         // Função para buscar imagem do produto
         async function buscarImagemProduto(url) {
             try {
-                imagemStatus.textContent = '🔍 Buscando imagem...';
+                imagemStatus.textContent = '🔍 Tentando buscar imagem...';
                 imagemStatus.style.color = '#C9A961';
 
-                // Detecta se é Mercado Livre ou Amazon
+                // Detecta Mercado Livre
                 if (url.includes('mercadolivre') || url.includes('mercadolibre') || url.includes('mlb')) {
                     buscarImagemMercadoLivre(url);
-                } else if (url.includes('amazon')) {
+                } 
+                // Detecta Amazon
+                else if (url.includes('amazon')) {
                     buscarImagemAmazon(url);
-                } else {
-                    imagemStatus.textContent = 'ℹ️ Cole a URL da imagem do produto manualmente';
+                } 
+                // Outros links - apenas mostra mensagem
+                else {
+                    imagemStatus.textContent = 'ℹ️ Cole a URL da imagem do produto manualmente abaixo';
                     imagemStatus.style.color = '#888';
                 }
             } catch (error) {
-                imagemStatus.textContent = '⚠️ Erro ao buscar imagem';
-                imagemStatus.style.color = '#ff6b6b';
+                imagemStatus.textContent = 'ℹ️ Cole a URL da imagem do produto manualmente';
+                imagemStatus.style.color = '#888';
                 console.error('Erro:', error);
             }
         }
@@ -622,7 +631,7 @@
         linkAfiliadoInput.addEventListener('paste', (e) => {
             setTimeout(() => {
                 const url = linkAfiliadoInput.value;
-                if (url) {
+                if (url && (url.includes('mercadolivre') || url.includes('amazon'))) {
                     buscarImagemProduto(url);
                 }
             }, 100);
@@ -631,20 +640,25 @@
         // Buscar imagem quando o link for digitado
         linkAfiliadoInput.addEventListener('input', (e) => {
             const url = e.target.value;
-            // Só busca se tiver um link completo (começa com http)
-            if (url.startsWith('http') && url.length > 20) {
+            // Só busca automaticamente se for Mercado Livre ou Amazon
+            if (url.startsWith('http') && url.length > 20 && (url.includes('mercadolivre') || url.includes('amazon'))) {
                 clearTimeout(linkAfiliadoInput.searchTimeout);
                 linkAfiliadoInput.searchTimeout = setTimeout(() => {
                     buscarImagemProduto(url);
-                }, 500); // Espera 500ms após parar de digitar
+                }, 800);
             }
         });
 
-        // Também busca quando o link é alterado
-        linkAfiliadoInput.addEventListener('change', (e) => {
+        // Preview quando URL da imagem é alterada manualmente
+        urlImagemInput.addEventListener('input', (e) => {
             const url = e.target.value;
-            if (url && !urlImagemInput.value) {
-                buscarImagemProduto(url);
+            if (url) {
+                imgPreview.src = url;
+                previewImagem.style.display = 'block';
+                imagemStatus.textContent = '✅ Imagem pronta!';
+                imagemStatus.style.color = '#4CAF50';
+            } else {
+                previewImagem.style.display = 'none';
             }
         });
 
@@ -746,7 +760,7 @@
                 formProduct.reset();
                 previewImagem.style.display = 'none';
                 produtoIdInput.value = '';
-                imagemStatus.textContent = 'Cole o link do Mercado Livre';
+                imagemStatus.textContent = 'Cole a URL da imagem do produto';
                 imagemStatus.style.color = '#888';
             } catch (error) {
                 alert('Erro ao salvar produto: ' + error.message);
@@ -865,7 +879,7 @@
             btnCancelar.style.display = 'none';
             formProduct.reset();
             previewImagem.style.display = 'none';
-            imagemStatus.textContent = 'Cole o link do Mercado Livre';
+            imagemStatus.textContent = 'Cole a URL da imagem do produto';
             imagemStatus.style.color = '#888';
         }
 
