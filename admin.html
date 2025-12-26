@@ -217,6 +217,111 @@
             min-height: 100px;
             resize: vertical;
         }
+
+        .produtos-lista {
+            margin-top: 50px;
+        }
+
+        .produto-item {
+            background: rgba(15, 15, 15, 0.6);
+            border: 1px solid rgba(201, 169, 97, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .produto-item:hover {
+            border-color: #C9A961;
+            background: rgba(15, 15, 15, 0.8);
+        }
+
+        .produto-item img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .produto-item .emoji-display {
+            font-size: 3rem;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(201, 169, 97, 0.1);
+            border-radius: 8px;
+        }
+
+        .produto-info {
+            flex: 1;
+        }
+
+        .produto-info h4 {
+            color: #E6D5A8;
+            margin-bottom: 5px;
+            font-size: 1.1rem;
+        }
+
+        .produto-info small {
+            color: #888;
+            display: block;
+        }
+
+        .produto-acoes {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-editar, .btn-excluir {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .btn-editar {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-editar:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .btn-excluir {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-excluir:hover {
+            background: #da190b;
+            transform: translateY(-2px);
+        }
+
+        .categoria-badge {
+            display: inline-block;
+            background: rgba(201, 169, 97, 0.2);
+            color: #E6D5A8;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-left: 10px;
+        }
+
+        .loading {
+            text-align: center;
+            color: #888;
+            padding: 20px;
+        }
     </style>
 </head>
 <body>
@@ -248,7 +353,7 @@
                 Produto adicionado com sucesso!
             </div>
 
-            <h2 style="margin-bottom: 30px; color: #C9A961;">Adicionar Novo Produto</h2>
+            <h2 style="margin-bottom: 30px; color: #C9A961;" id="formTitle">Adicionar Novo Produto</h2>
             
             <form id="formProduct">
                 <div class="form-group">
@@ -270,12 +375,16 @@
                 <div class="form-group">
                     <label>Link de Afiliado</label>
                     <input type="url" id="linkAfiliado" placeholder="https://..." required>
+                    <small style="color: #888; display: block; margin-top: 5px;">Cole o link e a imagem será buscada automaticamente</small>
                 </div>
 
                 <div class="form-group">
                     <label>URL da Imagem do Produto</label>
                     <input type="url" id="urlImagem" placeholder="https://...">
-                    <small style="color: #888; display: block; margin-top: 5px;">Opcional - se deixar vazio, vai usar emoji</small>
+                    <small id="imagemStatus" style="color: #888; display: block; margin-top: 5px;">Opcional - se deixar vazio, vai usar emoji</small>
+                    <div id="previewImagem" style="margin-top: 10px; display: none;">
+                        <img id="imgPreview" style="max-width: 200px; border-radius: 8px; border: 2px solid #C9A961;" alt="Preview">
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -283,8 +392,18 @@
                     <input type="text" id="emoji" placeholder="Ex: 💻" maxlength="2">
                 </div>
 
-                <button type="submit" class="btn-submit">Adicionar Produto</button>
+                <input type="hidden" id="produtoId" value="">
+                <button type="submit" class="btn-submit" id="btnSubmit">Adicionar Produto</button>
+                <button type="button" class="btn-logout" id="btnCancelar" style="display: none; margin-top: 15px; width: 100%;">Cancelar Edição</button>
             </form>
+
+            <!-- Lista de Produtos -->
+            <div class="produtos-lista">
+                <h2 style="margin-bottom: 30px; color: #C9A961;">Produtos Cadastrados</h2>
+                <div id="listaProdutos" class="loading">
+                    Carregando produtos...
+                </div>
+            </div>
         </div>
     </div>
 
@@ -292,7 +411,7 @@
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-        import { getDatabase, ref, push } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+        import { getDatabase, ref, push, onValue, remove, update } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 
         // Configuração Firebase
         const firebaseConfig = {
@@ -320,6 +439,101 @@
         const userName = document.getElementById('userName');
         const formProduct = document.getElementById('formProduct');
         const successMessage = document.getElementById('successMessage');
+        const linkAfiliadoInput = document.getElementById('linkAfiliado');
+        const urlImagemInput = document.getElementById('urlImagem');
+        const imagemStatus = document.getElementById('imagemStatus');
+        const previewImagem = document.getElementById('previewImagem');
+        const imgPreview = document.getElementById('imgPreview');
+        const listaProdutos = document.getElementById('listaProdutos');
+        const formTitle = document.getElementById('formTitle');
+        const btnSubmit = document.getElementById('btnSubmit');
+        const btnCancelar = document.getElementById('btnCancelar');
+        const produtoIdInput = document.getElementById('produtoId');
+
+        // Função para buscar imagem do produto
+        async function buscarImagemProduto(url) {
+            try {
+                imagemStatus.textContent = '🔍 Buscando imagem...';
+                imagemStatus.style.color = '#C9A961';
+
+                // Extrai ASIN da Amazon
+                const asinMatch = url.match(/\/dp\/([A-Z0-9]{10})|\/product\/([A-Z0-9]{10})|\/gp\/product\/([A-Z0-9]{10})/);
+                
+                if (asinMatch) {
+                    const asin = asinMatch[1] || asinMatch[2] || asinMatch[3];
+                    // Formato padrão de imagem da Amazon
+                    const imageUrl = `https://m.media-amazon.com/images/I/${asin}._AC_SL1500_.jpg`;
+                    
+                    // Testa se a imagem existe
+                    const img = new Image();
+                    img.onload = function() {
+                        urlImagemInput.value = imageUrl;
+                        imgPreview.src = imageUrl;
+                        previewImagem.style.display = 'block';
+                        imagemStatus.textContent = '✅ Imagem encontrada!';
+                        imagemStatus.style.color = '#4CAF50';
+                    };
+                    img.onerror = function() {
+                        // Tenta formato alternativo
+                        tentarFormatoAlternativo(asin);
+                    };
+                    img.src = imageUrl;
+                } else {
+                    imagemStatus.textContent = 'ℹ️ Cole a URL da imagem manualmente';
+                    imagemStatus.style.color = '#888';
+                }
+            } catch (error) {
+                imagemStatus.textContent = '⚠️ Não foi possível buscar a imagem automaticamente';
+                imagemStatus.style.color = '#ff6b6b';
+            }
+        }
+
+        function tentarFormatoAlternativo(asin) {
+            // Tenta padrão de thumbnail
+            const altUrl = `https://images-na.ssl-images-amazon.com/images/I/${asin}._AC_UL1500_.jpg`;
+            const img = new Image();
+            img.onload = function() {
+                urlImagemInput.value = altUrl;
+                imgPreview.src = altUrl;
+                previewImagem.style.display = 'block';
+                imagemStatus.textContent = '✅ Imagem encontrada!';
+                imagemStatus.style.color = '#4CAF50';
+            };
+            img.onerror = function() {
+                imagemStatus.textContent = '⚠️ Cole a URL da imagem manualmente';
+                imagemStatus.style.color = '#ff6b6b';
+            };
+            img.src = altUrl;
+        }
+
+        // Buscar imagem quando o link for colado
+        linkAfiliadoInput.addEventListener('paste', (e) => {
+            setTimeout(() => {
+                const url = e.target.value;
+                if (url) {
+                    buscarImagemProduto(url);
+                }
+            }, 100);
+        });
+
+        // Também busca quando o link é digitado/alterado
+        linkAfiliadoInput.addEventListener('change', (e) => {
+            const url = e.target.value;
+            if (url && !urlImagemInput.value) {
+                buscarImagemProduto(url);
+            }
+        });
+
+        // Preview quando URL da imagem é alterada manualmente
+        urlImagemInput.addEventListener('input', (e) => {
+            const url = e.target.value;
+            if (url) {
+                imgPreview.src = url;
+                previewImagem.style.display = 'block';
+            } else {
+                previewImagem.style.display = 'none';
+            }
+        });
 
         // Login com Google
         btnLoginGoogle.addEventListener('click', async () => {
@@ -347,7 +561,7 @@
             }
         });
 
-        // Adicionar produto
+        // Adicionar ou editar produto
         formProduct.addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -362,7 +576,18 @@
             };
 
             try {
-                await push(ref(database, 'produtos'), produto);
+                const produtoId = produtoIdInput.value;
+                
+                if (produtoId) {
+                    // Editar produto existente
+                    await update(ref(database, `produtos/${produtoId}`), produto);
+                    successMessage.textContent = 'Produto atualizado com sucesso!';
+                    cancelarEdicao();
+                } else {
+                    // Adicionar novo produto
+                    await push(ref(database, 'produtos'), produto);
+                    successMessage.textContent = 'Produto adicionado com sucesso!';
+                }
                 
                 // Mostrar mensagem de sucesso
                 successMessage.classList.remove('hidden');
@@ -372,8 +597,136 @@
 
                 // Limpar formulário
                 formProduct.reset();
+                previewImagem.style.display = 'none';
             } catch (error) {
-                alert('Erro ao adicionar produto: ' + error.message);
+                alert('Erro ao salvar produto: ' + error.message);
+            }
+        });
+
+        // Carregar lista de produtos
+        function carregarListaProdutos() {
+            const produtosRef = ref(database, 'produtos');
+            
+            onValue(produtosRef, (snapshot) => {
+                const produtos = snapshot.val();
+                
+                if (!produtos) {
+                    listaProdutos.innerHTML = '<p style="color: #888; text-align: center;">Nenhum produto cadastrado ainda.</p>';
+                    return;
+                }
+
+                let html = '';
+                Object.entries(produtos).forEach(([id, produto]) => {
+                    const categoriaLabel = {
+                        notebooks: 'Notebooks',
+                        celulares: 'Celulares',
+                        acessorios: 'Acessórios',
+                        games: 'Games'
+                    }[produto.categoria] || produto.categoria;
+
+                    const media = produto.imagem 
+                        ? `<img src="${produto.imagem}" alt="${produto.nome}">`
+                        : `<div class="emoji-display">${produto.emoji || '📦'}</div>`;
+
+                    html += `
+                        <div class="produto-item" data-id="${id}">
+                            ${media}
+                            <div class="produto-info">
+                                <h4>${produto.nome} <span class="categoria-badge">${categoriaLabel}</span></h4>
+                                <small>Adicionado por: ${produto.adicionadoPor}</small>
+                            </div>
+                            <div class="produto-acoes">
+                                <button class="btn-editar" data-id="${id}" data-categoria="${produto.categoria}" data-nome="${produto.nome}" data-link="${produto.link}" data-imagem="${produto.imagem || ''}" data-emoji="${produto.emoji || ''}">✏️ Editar</button>
+                                <button class="btn-excluir" data-id="${id}" data-nome="${produto.nome}">🗑️ Excluir</button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                listaProdutos.innerHTML = html;
+
+                // Adicionar event listeners aos botões
+                document.querySelectorAll('.btn-editar').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = this.getAttribute('data-id');
+                        const produto = {
+                            categoria: this.getAttribute('data-categoria'),
+                            nome: this.getAttribute('data-nome'),
+                            link: this.getAttribute('data-link'),
+                            imagem: this.getAttribute('data-imagem'),
+                            emoji: this.getAttribute('data-emoji')
+                        };
+                        editarProduto(id, produto);
+                    });
+                });
+
+                document.querySelectorAll('.btn-excluir').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = this.getAttribute('data-id');
+                        const nome = this.getAttribute('data-nome');
+                        excluirProduto(id, nome);
+                    });
+                });
+            });
+        }
+
+        // Editar produto
+        function editarProduto(id, produto) {
+            // Preencher formulário
+            produtoIdInput.value = id;
+            document.getElementById('categoria').value = produto.categoria;
+            document.getElementById('nomeProduto').value = produto.nome;
+            document.getElementById('linkAfiliado').value = produto.link;
+            document.getElementById('urlImagem').value = produto.imagem || '';
+            document.getElementById('emoji').value = produto.emoji || '';
+
+            // Mostrar preview se tiver imagem
+            if (produto.imagem) {
+                imgPreview.src = produto.imagem;
+                previewImagem.style.display = 'block';
+            }
+
+            // Alterar UI para modo edição
+            formTitle.textContent = 'Editar Produto';
+            btnSubmit.textContent = 'Salvar Alterações';
+            btnCancelar.style.display = 'block';
+
+            // Scroll para o formulário
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Excluir produto
+        async function excluirProduto(id, nome) {
+            if (confirm(`Tem certeza que deseja excluir "${nome}"?`)) {
+                try {
+                    await remove(ref(database, `produtos/${id}`));
+                    successMessage.textContent = 'Produto excluído com sucesso!';
+                    successMessage.classList.remove('hidden');
+                    setTimeout(() => {
+                        successMessage.classList.add('hidden');
+                    }, 3000);
+                } catch (error) {
+                    alert('Erro ao excluir produto: ' + error.message);
+                }
+            }
+        }
+
+        // Cancelar edição
+        function cancelarEdicao() {
+            produtoIdInput.value = '';
+            formTitle.textContent = 'Adicionar Novo Produto';
+            btnSubmit.textContent = 'Adicionar Produto';
+            btnCancelar.style.display = 'none';
+            formProduct.reset();
+            previewImagem.style.display = 'none';
+        }
+
+        btnCancelar.addEventListener('click', cancelarEdicao);
+
+        // Carregar produtos quando usuário logar
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                carregarListaProdutos();
             }
         });
     </script>
