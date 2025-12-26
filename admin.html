@@ -346,7 +346,10 @@
                 <div>
                     <strong>Logado como:</strong> <span id="userName"></span>
                 </div>
-                <button id="btnLogout" class="btn-logout">Sair</button>
+                <div style="display: flex; gap: 10px;">
+                    <button id="btnLimparTudo" class="btn-logout" style="background: #f44336; border-color: #f44336;">🗑️ Limpar Todos</button>
+                    <button id="btnLogout" class="btn-logout">Sair</button>
+                </div>
             </div>
 
             <div id="successMessage" class="success-message hidden">
@@ -436,6 +439,7 @@
         const adminPanel = document.getElementById('adminPanel');
         const btnLoginGoogle = document.getElementById('btnLoginGoogle');
         const btnLogout = document.getElementById('btnLogout');
+        const btnLimparTudo = document.getElementById('btnLimparTudo');
         const userName = document.getElementById('userName');
         const formProduct = document.getElementById('formProduct');
         const successMessage = document.getElementById('successMessage');
@@ -547,6 +551,30 @@
         // Logout
         btnLogout.addEventListener('click', async () => {
             await signOut(auth);
+        });
+
+        // Limpar todos os produtos
+        btnLimparTudo.addEventListener('click', async () => {
+            const confirmacao = confirm('⚠️ ATENÇÃO! Isso vai DELETAR TODOS OS PRODUTOS permanentemente!\n\nDigite "DELETAR TUDO" na próxima janela para confirmar.');
+            
+            if (confirmacao) {
+                const confirmacaoFinal = prompt('Digite "DELETAR TUDO" (exatamente assim) para confirmar:');
+                
+                if (confirmacaoFinal === 'DELETAR TUDO') {
+                    try {
+                        await remove(ref(database, 'produtos'));
+                        successMessage.textContent = '🗑️ Todos os produtos foram deletados!';
+                        successMessage.classList.remove('hidden');
+                        setTimeout(() => {
+                            successMessage.classList.add('hidden');
+                        }, 3000);
+                    } catch (error) {
+                        alert('Erro ao deletar produtos: ' + error.message);
+                    }
+                } else {
+                    alert('Operação cancelada. Texto de confirmação incorreto.');
+                }
+            }
         });
 
         // Verificar estado de autenticação
