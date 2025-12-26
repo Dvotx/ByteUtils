@@ -598,6 +598,9 @@
                 // Limpar formulário
                 formProduct.reset();
                 previewImagem.style.display = 'none';
+                produtoIdInput.value = '';
+                imagemStatus.textContent = 'Opcional - se deixar vazio, vai usar emoji';
+                imagemStatus.style.color = '#888';
             } catch (error) {
                 alert('Erro ao salvar produto: ' + error.message);
             }
@@ -719,6 +722,8 @@
             btnCancelar.style.display = 'none';
             formProduct.reset();
             previewImagem.style.display = 'none';
+            imagemStatus.textContent = 'Opcional - se deixar vazio, vai usar emoji';
+            imagemStatus.style.color = '#888';
         }
 
         btnCancelar.addEventListener('click', cancelarEdicao);
