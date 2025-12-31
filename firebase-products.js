@@ -17,49 +17,62 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
-// Carregar produtos por categoria
-function carregarProdutos() {
-    const produtosRef = ref(database, 'produtos');
+// Carregar categorias dinâmicas
+function carregarCategorias() {
+    const categoriasRef = ref(database, 'categorias');
     
-    onValue(produtosRef, (snapshot) => {
-        const produtos = snapshot.val();
+    onValue(categoriasRef, (snapshot) => {
+        const categorias = snapshot.val();
         
-        if (!produtos) return;
+        if (!categorias) return;
 
-        // Organizar produtos por categoria
-        const categorias = {
-            notebooks: [],
-            celulares: [],
-            acessorios: [],
-            games: []
-        };
-
-        Object.values(produtos).forEach(produto => {
-            if (categorias[produto.categoria]) {
-                categorias[produto.categoria].push(produto);
-            }
+        renderizarContainersCategorias(categorias);
+        
+        Object.keys(categorias).forEach(categoriaId => {
+            carregarProdutosDaCategoria(categoriaId, categorias[categoriaId]);
         });
-
-        // Renderizar produtos em cada categoria
-        renderizarCategoria('notebooks', categorias.notebooks);
-        renderizarCategoria('celulares', categorias.celulares);
-        renderizarCategoria('acessorios', categorias.acessorios);
-        renderizarCategoria('games', categorias.games);
     });
 }
 
-function renderizarCategoria(categoriaId, produtos) {
-    const container = document.getElementById(`container-${categoriaId}`);
-    if (!container) return;
+function renderizarContainersCategorias(categorias) {
+    const mainContainer = document.querySelector('.produtos-container') || document.querySelector('main');
+    if (!mainContainer) return;
     
-    // Limpa o container antes de adicionar novos produtos
-    container.innerHTML = '';
+    const sectionsAnteriores = mainContainer.querySelectorAll('section[id^="section-"]');
+    sectionsAnteriores.forEach(section => section.remove());
     
-    if (produtos.length === 0) return;
+    const categoriasOrdenadas = Object.entries(categorias).sort((a, b) => {
+        return (a[1].ordem || 0) - (b[1].ordem || 0);
+    });
+    
+    categoriasOrdenadas.forEach(([id, categoria]) => {
+        const sectionHTML = `
+            <section id="section-${id}">
+                <h2>${categoria.nome}</h2>
+                <div class="container-produtos" id="container-${id}"></div>
+            </section>
+        `;
+        mainContainer.insertAdjacentHTML('beforeend', sectionHTML);
+    });
+}
 
-    produtos.forEach((produto, index) => {
-        const produtoHTML = criarCardProduto(produto, index);
-        container.insertAdjacentHTML('beforeend', produtoHTML);
+function carregarProdutosDaCategoria(categoriaId, categoria) {
+    const produtosRef = ref(database, `produtos/${categoriaId}`);
+    
+    onValue(produtosRef, (snapshot) => {
+        const produtos = snapshot.val();
+        const container = document.getElementById(`container-${categoriaId}`);
+        
+        if (!container) return;
+        
+        container.innerHTML = '';
+        
+        if (!produtos) return;
+
+        Object.values(produtos).forEach((produto, index) => {
+            const produtoHTML = criarCardProduto(produto, index);
+            container.insertAdjacentHTML('beforeend', produtoHTML);
+        });
     });
 }
 
@@ -81,4 +94,4 @@ function criarCardProduto(produto, index) {
 }
 
 // Carregar produtos quando a página carregar
-document.addEventListener('DOMContentLoaded', carregarProdutos);
+document.addEventListener('DOMContentLoaded', carregarCategorias);
