@@ -273,9 +273,9 @@ body {
     background: linear-gradient(135deg, var(--cinza-claro) 0%, var(--branco) 100%);
     color: var(--preto);
     padding: 0;
-    width: 160px;
-    min-width: 160px;
-    min-height: 200px;
+    width: 200px;
+    min-width: 200px;
+    min-height: 220px;
     font-family: 'Segoe UI', Arial, sans-serif;
     border-radius: 15px;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
